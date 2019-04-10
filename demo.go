@@ -22,27 +22,20 @@ func doRequest(url string) (error, string) {
 	return nil, string(response.Body())
 }
 
-func doTheThing() {
-	hystrix.ConfigureCommand("hystrix_demo", hystrix.CommandConfig{
-		Timeout:		1000,
-		MaxConcurrentRequests:	100,
-		ErrorPercentThreshold:	25,
-	})
-
+func doTheThing(counter int) {
 	hystrix.Go("hystrix_demo", func() error {
-		for counter := 0; counter < 10; counter++ {
-			if counter == 5 {
-				err, response := doRequest("https://hystrix-demo.free.beeceptor.com/check?status=0")
-				if err != nil {
-					return err
-				}
-				fmt.Println(response)
-			}
-			err, response := doRequest("https://hystrix-demo.free.beeceptor.com/check?status=1")
+		if counter == 3 {
+			fmt.Println("Counter is 5, time to error")
+			err, _ := doRequest("https://hystrix-demo.free.beeceptor.com/check?status=0")
 			if err != nil {
 				return err
 			}
-			fmt.Println(response)
+		}
+
+		fmt.Println("Everything is 200 OK")
+		err, _ := doRequest("https://hystrix-demo.free.beeceptor.com/check?status=1")
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -55,5 +48,15 @@ func doTheThing() {
 }
 
 func main() {
-	doTheThing()
+	hystrix.ConfigureCommand("hystrix_demo", hystrix.CommandConfig{
+		Timeout:		1000,
+		MaxConcurrentRequests:	100,
+		ErrorPercentThreshold:	25,
+	})
+
+	for counter := 0; counter < 5; counter++ {
+		doTheThing(counter)
+	}
+
+	doRequest("https://httpstat.us/200")
 }
