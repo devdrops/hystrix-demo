@@ -5,5 +5,6 @@ services:
     image: golang:latest
     volumes:
       - .:/demo
+      - ./volumes/go:/go
     working_dir: /demo
 
